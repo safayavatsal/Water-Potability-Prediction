@@ -30,6 +30,8 @@ from imblearn.pipeline import Pipeline as ImbPipeline
 from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
 
+from features import WaterFeatureEngineer
+
 warnings.filterwarnings("ignore")
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), "data", "water_potability.csv")
@@ -122,6 +124,7 @@ def train_and_evaluate():
         print(f"{'='*60}")
 
         pipeline = ImbPipeline([
+            ("features", WaterFeatureEngineer()),
             ("smote", SMOTE(random_state=42)),
             ("scaler", StandardScaler()),
             ("classifier", estimator),
