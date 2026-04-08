@@ -1,0 +1,11 @@
+.git
+.gitignore
+.cursor
+.claude
+.DS_Store
+__pycache__
+*.pyc
+notebook/
+.devcontainer/
+openmemory.md
+CLAUDE.md

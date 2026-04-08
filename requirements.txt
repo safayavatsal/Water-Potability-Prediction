@@ -7,3 +7,6 @@ lightgbm
 imbalanced-learn
 shap
 plotly
+fastapi
+uvicorn
+matplotlib
