@@ -1,0 +1,60 @@
+{
+  "best_model": "LightGBM",
+  "models": {
+    "RandomForest": {
+      "best_params": {
+        "classifier__class_weight": "balanced",
+        "classifier__max_depth": 20,
+        "classifier__min_samples_split": 2,
+        "classifier__n_estimators": 200
+      },
+      "cv_best_f1": 0.7192412477234879,
+      "test_accuracy": 0.7804878048780488,
+      "test_f1": 0.7323420074349443,
+      "test_precision": 0.6985815602836879,
+      "test_recall": 0.76953125,
+      "test_roc_auc": 0.8758935546875
+    },
+    "XGBoost": {
+      "best_params": {
+        "classifier__learning_rate": 0.1,
+        "classifier__max_depth": 10,
+        "classifier__n_estimators": 300,
+        "classifier__scale_pos_weight": 1.5
+      },
+      "cv_best_f1": 0.7204729702817217,
+      "test_accuracy": 0.7713414634146342,
+      "test_f1": 0.7201492537313433,
+      "test_precision": 0.6892857142857143,
+      "test_recall": 0.75390625,
+      "test_roc_auc": 0.877470703125
+    },
+    "LightGBM": {
+      "best_params": {
+        "classifier__is_unbalance": true,
+        "classifier__learning_rate": 0.1,
+        "classifier__max_depth": 10,
+        "classifier__n_estimators": 100
+      },
+      "cv_best_f1": 0.7173837519370598,
+      "test_accuracy": 0.7820121951219512,
+      "test_f1": 0.7346938775510204,
+      "test_precision": 0.6996466431095406,
+      "test_recall": 0.7734375,
+      "test_roc_auc": 0.8844921875
+    },
+    "GradientBoosting": {
+      "best_params": {
+        "classifier__learning_rate": 0.01,
+        "classifier__max_depth": 3,
+        "classifier__n_estimators": 300
+      },
+      "cv_best_f1": 0.7091470445292334,
+      "test_accuracy": 0.7591463414634146,
+      "test_f1": 0.7312925170068028,
+      "test_precision": 0.6475903614457831,
+      "test_recall": 0.83984375,
+      "test_roc_auc": 0.8740185546874999
+    }
+  }
+}
