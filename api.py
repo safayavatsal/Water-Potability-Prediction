@@ -86,6 +86,9 @@ def predict(sample: WaterSample):
 
 @app.post("/predict/batch", response_model=BatchResponse)
 def predict_batch(batch: BatchRequest):
+    if not batch.samples:
+        return BatchResponse(results=[], summary={"total": 0, "potable": 0, "not_potable": 0})
+
     model = load_model()
     input_data = pd.DataFrame([s.model_dump() for s in batch.samples])
     predictions = model.predict(input_data)

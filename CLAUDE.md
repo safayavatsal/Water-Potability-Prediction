@@ -2,76 +2,87 @@
 
 ## Project Overview
 
-A machine learning web application that predicts whether water is safe for human consumption based on 9 physicochemical properties. Uses a trained Random Forest Classifier deployed via Streamlit.
+A machine learning web application that predicts whether water is safe for human consumption based on 9 physicochemical properties. Uses the best model from a comparative evaluation (Random Forest, XGBoost, LightGBM, Gradient Boosting) with SMOTE oversampling and hyperparameter tuning, deployed via Streamlit with a FastAPI REST API backend.
 
 ## Tech Stack
 
-- **Language:** Python 3.11
-- **Web Framework:** Streamlit
-- **ML Library:** scikit-learn (RandomForestClassifier)
+- **Language:** Python 3.11+
+- **Web Framework:** Streamlit (frontend), FastAPI (REST API)
+- **ML Libraries:** scikit-learn, XGBoost, LightGBM, imbalanced-learn (SMOTE)
+- **Explainability:** SHAP
+- **Visualization:** Plotly, matplotlib
 - **Data Processing:** pandas, numpy
-- **Visualization (notebook):** matplotlib, seaborn
-- **Model Serialization:** pickle
+- **Testing:** pytest, httpx
+- **CI/CD:** GitHub Actions
+- **Containerization:** Docker, Docker Compose
 
 ## Project Structure
 
 ```
-├── app.py                  # Streamlit web app — main entry point
+├── app.py                  # Multi-page Streamlit web app (Predict, Batch, Explore, Performance, About)
+├── api.py                  # FastAPI REST API (/predict, /predict/batch, /health)
+├── train_model.py          # Model training: multi-model comparison + GridSearchCV + SMOTE
+├── features.py             # Feature engineering: WHO threshold flags + interaction features
+├── explainability.py       # SHAP-based model explanations (global + per-prediction)
 ├── data/
-│   └── water_potability.csv  # Dataset (3,276 samples, 9 features + target)
+│   └── water_potability.csv
 ├── models/
-│   └── water_potability_random_forest.pkl  # Trained RF model (~5.2 MB)
-├── notebook/
-│   └── Water Potbaility_ML Project.ipynb   # EDA, preprocessing, training notebook
+│   ├── best_model.pkl      # Best model pipeline (features + SMOTE + scaler + classifier)
+│   └── model_comparison.json
+├── tests/
+│   ├── test_model.py       # Model, prediction, dataset, and feature engineering tests
+│   └── test_api.py         # FastAPI endpoint tests
+├── .github/workflows/
+│   └── ci.yml              # GitHub Actions: pytest + ruff linting
+├── Dockerfile              # Production container image
+├── docker-compose.yml      # Runs Streamlit (8501) + FastAPI (8000)
 ├── .devcontainer/
-│   └── devcontainer.json   # GitHub Codespaces / VS Code dev container config
-├── requirements.txt        # Python dependencies (no version pinning)
-├── LICENSE                 # MIT License (Dhruv Jaradi, 2025)
-└── README.md               # Project documentation
+│   └── devcontainer.json
+├── requirements.txt
+├── LICENSE                 # MIT License
+└── README.md
 ```
 
-## Running the App
+## Running
 
 ```bash
+# Install dependencies
 pip install -r requirements.txt
+
+# Run Streamlit app
 streamlit run app.py
+
+# Run FastAPI
+uvicorn api:app --reload
+
+# Run tests
+pytest tests/ -v
+
+# Retrain models
+python train_model.py
+
+# Docker
+docker compose up
 ```
 
-The app runs on port 8501 by default.
+## Model Pipeline
 
-## Model Details
+Pipeline: `WaterFeatureEngineer → SMOTE → StandardScaler → Classifier`
 
-- **Algorithm:** Random Forest Classifier (default hyperparameters, `random_state=42`)
-- **Train/Test Split:** 80/20
-- **Accuracy:** ~83%
-- **Class Performance:**
-  - Non-potable (0): Precision=0.81, Recall=0.94, F1=0.87
-  - Potable (1): Precision=0.87, Recall=0.64, F1=0.73
+- **Feature Engineering:** WHO threshold binary flags, violation count, interaction features (ph×turbidity, chloramines/organic_carbon, solids/conductivity)
+- **Class Imbalance:** SMOTE oversampling (60/40 → balanced)
+- **Hyperparameter Tuning:** GridSearchCV with 5-fold stratified CV, scored by F1
+- **Model Selection:** Best model by test F1 across RF, XGBoost, LightGBM, GradientBoosting
+
+## API Endpoints
+
+- `GET /health` — readiness check
+- `POST /predict` — single sample prediction (returns potable, confidence, label)
+- `POST /predict/batch` — batch prediction
+- `GET /docs` — Swagger UI (auto-generated)
 
 ## Dataset Features (Input Order)
 
-The model expects features in this exact order:
-
-1. `ph` — Acidity/alkalinity (0–14)
-2. `Hardness` — Mineral concentration (mg/L)
-3. `Solids` — Total dissolved solids (mg/L)
-4. `Chloramines` — Disinfectant level (ppm)
-5. `Sulfate` — Chemical compound (mg/L)
-6. `Conductivity` — Electrical conductivity (μS/cm)
-7. `Organic_carbon` — Organic contaminants (mg/L)
-8. `Trihalomethanes` — Disinfection byproducts (μg/L)
-9. `Turbidity` — Water clarity (NTU)
-
-**Important:** Feature names in prediction DataFrames must match training data exactly (e.g., `Organic_carbon`, not `Organic Carbon`).
-
-## Data Preprocessing (in notebook)
-
-- Missing values in `ph`, `Sulfate`, `Trihalomethanes` filled using grouped mean by Potability class
-- Outliers in `Solids` handled via IQR clamping (1.5×IQR threshold)
-
-## Development Notes
-
-- The `.devcontainer/` config auto-installs dependencies and starts the Streamlit app on port 8501
-- CORS and XSRF protection are disabled in devcontainer for local development convenience
-- The dataset has class imbalance: ~60% non-potable, ~40% potable
-- No version pinning in requirements.txt — consider pinning for reproducibility
+1. `ph` (0–14), 2. `Hardness` (mg/L), 3. `Solids` (mg/L), 4. `Chloramines` (ppm),
+5. `Sulfate` (mg/L), 6. `Conductivity` (μS/cm), 7. `Organic_carbon` (mg/L),
+8. `Trihalomethanes` (μg/L), 9. `Turbidity` (NTU)
