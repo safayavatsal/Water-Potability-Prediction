@@ -1,6 +1,5 @@
 """Tests for the FastAPI REST API."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 from api import app

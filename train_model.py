@@ -6,15 +6,17 @@ handles class imbalance with SMOTE, performs hyperparameter tuning with GridSear
 and saves the best model along with evaluation metrics.
 """
 
-import os
 import json
+import os
 import pickle
 import warnings
 
 import numpy as np
 import pandas as pd
+from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline as ImbPipeline
+from lightgbm import LGBMClassifier
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -24,11 +26,9 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.preprocessing import StandardScaler
-from imblearn.over_sampling import SMOTE
-from imblearn.pipeline import Pipeline as ImbPipeline
 from xgboost import XGBClassifier
-from lightgbm import LGBMClassifier
 
 from features import WaterFeatureEngineer
 

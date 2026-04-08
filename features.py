@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
-
 # WHO safe limits used for threshold-based binary flags
 WHO_SAFE_RANGES = {
     "ph": (6.5, 8.5),

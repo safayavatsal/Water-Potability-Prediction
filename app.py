@@ -164,7 +164,11 @@ def page_predict():
                 # SHAP waterfall
                 with st.spinner("Generating explanation..."):
                     try:
-                        from explainability import compute_shap_values, load_data, plot_waterfall
+                        from explainability import (
+                            compute_shap_values,
+                            load_data,
+                            plot_waterfall,
+                        )
                         X_bg = load_data()
                         shap_vals = compute_shap_values(model, X_bg, input_data)
                         fig = plot_waterfall(shap_vals, index=0)
@@ -261,7 +265,11 @@ def page_model_performance():
     st.subheader("Global Feature Importance (SHAP)")
     with st.spinner("Computing SHAP values..."):
         try:
-            from explainability import load_data, plot_beeswarm, plot_global_feature_importance
+            from explainability import (
+                load_data,
+                plot_beeswarm,
+                plot_global_feature_importance,
+            )
             model = load_model()
             X_bg = load_data()
             col1, col2 = st.columns(2)
