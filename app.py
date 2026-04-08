@@ -173,6 +173,18 @@ if model:
                     st.metric("Potability Confidence", f"{confidence:.1%}")
                     st.progress(confidence)
 
+                # SHAP explanation for this prediction
+                with st.spinner("Generating explanation..."):
+                    try:
+                        from explainability import compute_shap_values, load_data, plot_waterfall
+                        X_bg = load_data()
+                        shap_vals = compute_shap_values(model, X_bg, input_data)
+                        fig = plot_waterfall(shap_vals, index=0)
+                        st.subheader("Why did the model make this prediction?")
+                        st.pyplot(fig)
+                    except Exception:
+                        pass  # SHAP is optional; don't break the app
+
         except Exception as e:
             st.error(f"An error occurred during prediction: {str(e)}")
 
@@ -193,6 +205,21 @@ if model:
         - **Trihalomethanes:** ≤ 80 μg/L
         - **Turbidity:** ≤ 5 NTU
         """)
+
+    # Global SHAP feature importance
+    with st.expander("Global Feature Importance (SHAP)"):
+        with st.spinner("Computing SHAP values..."):
+            try:
+                from explainability import load_data, plot_beeswarm, plot_global_feature_importance
+                X_bg = load_data()
+                fig_bar = plot_global_feature_importance(model, X_bg)
+                st.pyplot(fig_bar)
+                st.caption("Mean absolute SHAP value — how much each feature contributes to predictions on average.")
+                fig_bee = plot_beeswarm(model, X_bg)
+                st.pyplot(fig_bee)
+                st.caption("Each dot is a sample. Red = high feature value, blue = low. Position shows impact on prediction.")
+            except Exception as e:
+                st.info(f"SHAP plots unavailable: {e}")
 
     # Model comparison table
     if model_info:
