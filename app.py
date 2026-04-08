@@ -275,6 +275,87 @@ def page_model_performance():
             st.info(f"SHAP plots unavailable: {e}")
 
 
+def page_batch():
+    st.header("Batch Prediction")
+    st.markdown("Upload a CSV file with water quality samples to get predictions for all rows at once.")
+
+    REQUIRED_COLS = ["ph", "Hardness", "Solids", "Chloramines", "Sulfate",
+                     "Conductivity", "Organic_carbon", "Trihalomethanes", "Turbidity"]
+
+    # Provide a sample CSV template
+    sample_df = pd.DataFrame({
+        "ph": [7.0, 3.5], "Hardness": [150.0, 250.0], "Solids": [500.0, 30000.0],
+        "Chloramines": [2.0, 8.0], "Sulfate": [100.0, 350.0], "Conductivity": [400.0, 600.0],
+        "Organic_carbon": [1.0, 15.0], "Trihalomethanes": [50.0, 100.0], "Turbidity": [1.0, 4.5],
+    })
+    st.download_button(
+        "Download sample CSV template",
+        sample_df.to_csv(index=False).encode(),
+        file_name="water_sample_template.csv",
+        mime="text/csv",
+    )
+
+    uploaded = st.file_uploader("Upload your CSV file", type=["csv"])
+    if uploaded is not None:
+        try:
+            df = pd.read_csv(uploaded)
+            st.subheader(f"Uploaded data: {len(df)} samples")
+            st.dataframe(df.head(10), use_container_width=True)
+
+            # Validate columns
+            missing_cols = [c for c in REQUIRED_COLS if c not in df.columns]
+            if missing_cols:
+                st.error(f"Missing required columns: {', '.join(missing_cols)}")
+                return
+
+            model = load_model()
+            if model is None:
+                st.error("Model not loaded.")
+                return
+
+            input_data = df[REQUIRED_COLS].copy()
+
+            # Drop rows with all NaN
+            valid_mask = ~input_data.isna().all(axis=1)
+            input_valid = input_data[valid_mask].fillna(0)
+
+            if len(input_valid) == 0:
+                st.error("No valid rows found in uploaded data.")
+                return
+
+            predictions = model.predict(input_valid)
+            probabilities = None
+            if hasattr(model, "predict_proba"):
+                probabilities = model.predict_proba(input_valid)[:, 1]
+
+            results = df.loc[valid_mask].copy()
+            results["Prediction"] = ["Potable" if p == 1 else "Not Potable" for p in predictions]
+            if probabilities is not None:
+                results["Confidence"] = [f"{p:.1%}" for p in probabilities]
+
+            st.subheader("Results")
+            col1, col2, col3 = st.columns(3)
+            potable_count = int((predictions == 1).sum())
+            col1.metric("Total Samples", len(predictions))
+            col2.metric("Potable", potable_count)
+            col3.metric("Not Potable", len(predictions) - potable_count)
+
+            # Color-code results
+            st.dataframe(results, use_container_width=True, hide_index=True)
+
+            # Download results
+            csv_result = results.to_csv(index=False).encode()
+            st.download_button(
+                "Download results as CSV",
+                csv_result,
+                file_name="water_potability_results.csv",
+                mime="text/csv",
+            )
+
+        except Exception as e:
+            st.error(f"Error processing file: {str(e)}")
+
+
 def page_about():
     st.header("About")
     st.markdown("""
@@ -308,6 +389,7 @@ def page_about():
 
 pages = {
     "Predict": page_predict,
+    "Batch Prediction": page_batch,
     "Data Exploration": page_explore,
     "Model Performance": page_model_performance,
     "About": page_about,
